@@ -4,10 +4,12 @@ import { ScanBuilder } from "./scan_builder";
 import { UpdateBuilder } from "./update_builder";
 import { DeleteBuilder } from "./delete_builder";
 import { PutBuilder } from "./put_builder";
+import { BatchGetBuilder } from "./get_builder";
 
 export const STOP = Symbol();
 
 export default class Tunisia {
+  // private db: aws.DynamoDB;
   private client: aws.DynamoDB.DocumentClient;
 
   public getClient() {
@@ -15,25 +17,14 @@ export default class Tunisia {
   }
 
   public static fromConfig(
-    config: aws.DynamoDB.DocumentClient.DocumentClientOptions
+    config: aws.DynamoDB.DocumentClient.DocumentClientOptions,
   ) {
     return new Tunisia(config);
   }
 
-  public static fromClient(client: aws.DynamoDB.DocumentClient) {
-    return new Tunisia(client);
-  }
-
-  constructor(
-    config:
-      | aws.DynamoDB.DocumentClient.DocumentClientOptions
-      | aws.DynamoDB.DocumentClient
-  ) {
-    if (config instanceof aws.DynamoDB.DocumentClient) {
-      this.client = config;
-    } else {
-      this.client = new aws.DynamoDB.DocumentClient(config);
-    }
+  constructor(config: aws.DynamoDB.ClientConfiguration) {
+    this.client = new aws.DynamoDB.DocumentClient(config);
+    // this.db = new aws.DynamoDB(config);
   }
 
   public insert(table: string) {
@@ -53,6 +44,10 @@ export default class Tunisia {
     return this.delete(table);
   }
 
+  public get(table: string) {
+    return new BatchGetBuilder(table, this);
+  }
+
   public query(table: string) {
     return new QueryBuilder(table, this);
   }
@@ -65,6 +60,9 @@ export default class Tunisia {
     return new UpdateBuilder(table, this);
   }
   public change(table: string) {
+    return this.update(table);
+  }
+  public edit(table: string) {
     return this.update(table);
   }
 }
